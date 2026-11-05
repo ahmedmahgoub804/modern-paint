@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title>Modern Paint — Privacy Policy</title>
+
+	<meta http-equiv="Content-Security-Policy" content="
+		default-src 'self';
+		style-src 'self' 'unsafe-inline';
+	">
+
+	<link rel="apple-touch-icon" href="images/icons/apple-icon-180x180.png">
+	<!-- Chrome will pick the largest image for some reason, instead of the most appropriate one. -->
+	<!-- <link rel="icon" type="image/png" sizes="192x192" href="images/icons/192x192.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="images/icons/32x32.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="images/icons/96x96.png"> -->
+	<!-- <link rel="icon" type="image/png" sizes="16x16" href="images/icons/16x16.png"> -->
+	<link rel="shortcut icon" href="favicon.ico">
+	<link rel="mask-icon" href="images/icons/safari-pinned-tab.svg" color="red">
+	<link rel="manifest" href="manifest.webmanifest">
+	<meta name="msapplication-TileColor" content="#5965d8">
+	<meta name="msapplication-TileImage" content="images/icons/ms-icon-144x144.png">
+	<meta name="theme-color" content="#5965d8">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<meta name="description" content="Modern Paint privacy policy">
+
+	<link href="styles/legal.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body>
+	<h1 style="text-align: center;">
+		<img src="images/icons/128x128.png" width="128" height="128" alt="">
+		<br>
+		Modern Paint
+		<br>
+		Privacy Policy
+	</h1>
+
+	<p style="text-align: center;">Modern Paint is a browser-based bitmap image editor. This policy describes
+		what happens when you use its features.</p>
+
+	<main>
+		<h2>Personal Data</h2>
+		<p>
+			Modern Paint does not include advertising or analytics. Your drawings are normally kept in browser
+			storage on your device. The hosting provider for the copy of the app you use may process standard
+			request data, such as your IP address, to serve the app.
+		</p>
+		<h2>Third-Party Services</h2>
+		<p>
+			Optional features send data to third parties when you use them:
+		</p>
+		<ul>
+			<li>
+				<strong>File &gt; Upload to Imgur</strong> sends the selected image to
+				<a href="https://imgur.com">Imgur</a> for hosting.
+			</li>
+			<li>
+				When you load an image from a URL, Modern Paint requests it from that address. If that fails,
+				it may try the <a href="https://cors.bridged.cc/">cors.bridged.cc</a> proxy,
+				the legacy <a href="https://jspaint-cors-proxy.herokuapp.com/">image proxy</a>,
+				or the <a href="https://web.archive.org/">Internet Archive Wayback Machine</a>.
+			</li>
+			<li>
+				Speech Recognition mode may search Bing Images for clip art based on the drawing command you
+				speak.
+			</li>
+			<li>
+				Multi-User mode uses <a href="https://firebase.google.com/">Firebase</a> for real-time
+				collaboration.
+			</li>
+		</ul>
+		<p>
+			These services have their own privacy policies and terms. Their availability and behavior may
+			change.
+		</p>
+
+		<h2>Local Storage</h2>
+		<p>
+			Modern Paint stores local backups of your work in browser storage on your device.
+		</p>
+		<p>
+			You can view and delete stored images with <strong>File &gt; Manage Storage</strong>.
+		</p>
+		<p>
+			These backups can help if you close the tab or your computer crashes, but should not be your only
+			backup.
+		</p>
+		<p>
+			Browser private-browsing modes may prevent data from being retained after the session.
+		</p>
+		<p>
+			A URL containing <code>#local:</code> represents a local session. Its drawing data is stored in
+			your browser rather than shared through Multi-User mode.
+		</p>
+
+		<h2>Collaborative Sessions</h2>
+		<p>
+			Multi-User sessions are not private. Anyone with access to a session may be able to view, edit, or
+			delete its contents.
+		</p>
+		<p>
+			A URL containing <code>#session:</code> represents a collaborative session. Do not use it for
+			sensitive information.
+		</p>
+	</main>
+	<hr>
+	<footer>
+		<p>Modern Paint is distributed under the <a href="LICENSE.txt">MIT License</a>.</p>
+	</footer>
+</body>
+
+</html>

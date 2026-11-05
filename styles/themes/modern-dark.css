@@ -1,0 +1,50 @@
+@import "./modern.css";
+@import "./vista-esque-midnight-green.css";
+
+:root {
+	--theme-loaded: "modern-dark.css";
+
+	--Hilight: #0178d7;
+	--HilightText: #ffffff;
+	--WindowText: #ffffff;
+	--ButtonText: #ffffff;
+
+	--accent-color: #8b95ff;
+	--accent-color-hover: #a8afff;
+	--window-frame-active-color: #626edc;
+	--window-frame-inactive-color: #3b3c42;
+	--help-window-resizer-color: var(--window-frame-inactive-color);
+	--canvas-area-background-color: #171a22;
+	--canvas-area-border-color: #292e3a;
+	--window-background-color: #20232d;
+	--window-text-color: #ffffff;
+	--app-surface-muted: #292d39;
+	--app-border-color: #353a48;
+	--app-text-muted: #a6adbd;
+	--menu-background-color: #20232d;
+	--menu-text-color: #ffffff;
+	--menu-hover-color: #2b303c;
+	--menu-active-color: #3a4152;
+	--menu-text-disabled-color: #8d8d8d;
+	--menu-text-active-color: #eeeeee;
+	--menu-divider-color: rgba(128, 128, 128, 0.3);
+	/* Styles built-in controls like buttons. */
+	color-scheme: dark;
+}
+
+.tool-icon {
+	background-image: url("../../images/modern/modern-dark-tools.png");
+	background-position: calc(-16px * (var(--icon-index) * 2 + 1)) -16px;
+}
+.tool-icon.use-svg,
+.enlarge-ui .tool-icon.use-svg {
+	background-image: url("../../images/modern/modern-dark-tools.svg");
+	background-position: calc(-16px * (var(--icon-index) * 2 + 1)) -16px;
+}
+
+.toggle-dwell-clicking .button-icon {
+	background: url(../../images/dark/eye-gaze-pause.svg);
+}
+.dwell-clicker-mode.dwell-clicker-paused .toggle-dwell-clicking .button-icon {
+	background: url(../../images/dark/eye-gaze-unpause.svg);
+}

@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title>Modern Paint</title>
+
+	<!-- This should mirror CSP in electron-main.js, except maybe for firebase stuff. -->
+	<!-- Firebase stuff is somewhat speculative, as the quota is exceeded as I'm adding this. -->
+	<!-- Lax img-src is needed for speech recognition, e.g. interpret_command("draw a cat")[0].exec(); -->
+	<!-- connect-src needs data:/blob: for loading images via fetch, including from local storage. -->
+	<!-- script⁂-src needs blob: for the Web Worker used by clmtrackr for Tracky Mouse head tracking feature -->
+	<!-- ⁂: working around bug in @1j01/live-server, my fork of live-server meant to handle CSP (https://github.com/1j01/live-server)
+	where the directive (that shall not be named) is replaced even if it's outside the CSP in a comment. -->
+	<meta http-equiv="Content-Security-Policy" content="
+		default-src 'self';
+		script-src 'self' blob: https://jspaint.firebaseio.com https://www.youtube.com;
+		frame-src 'self' https://youtube.com https://www.youtube.com;
+		style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+		img-src 'self' data: blob: http: https:;
+		font-src 'self' https://fonts.gstatic.com;
+		connect-src * data: blob: https://jspaint.firebaseio.com wss://jspaint.firebaseio.com;
+	">
+
+	<link href="styles/normalize.css" rel="stylesheet" type="text/css">
+	<link href="styles/layout.css" class="flippable-layout-stylesheet" rel="stylesheet" type="text/css">
+	<link href="styles/print.css" rel="stylesheet" type="text/css" media="print">
+	<link href="lib/os-gui/build/layout.css" class="flippable-layout-stylesheet" rel="stylesheet" type="text/css">
+	<!-- <link href="lib/os-gui/build/windows-98.css" rel="stylesheet" type="text/css"> -->
+	<!-- <link href="lib/os-gui/build/windows-default.css" rel="stylesheet" type="text/css" title="Windows Default"> -->
+	<!-- <link href="lib/os-gui/build/peggys-pastels.css" rel="alternate stylesheet" type="text/css" title="Peggy's Pastels"> -->
+	<link href="lib/tracky-mouse/core/tracky-mouse.css" rel="stylesheet" type="text/css">
+	<!--
+		@TODO: bring these styles into OS-GUI.
+		This is a custom build of 98.css https://github.com/jdan/98.css
+		for checkboxes, radio buttons, sliders, and fieldsets,
+		excluding e.g. scrollbars, buttons, and windows (already in OS-GUI),
+		and integrating with the theme CSS vars used by OS-GUI,
+		and with some RTLCSS tweaks.
+		Text inputs and dropdowns are styled in classic.css, but should also be included in OS-GUI at some point.
+		This is not an @import in classic.css because it needs RTLCSS and I'm not applying RTLCSS to themes yet.
+		So I added .not-for-modern logic to theme.js to exclude these styles depending on the theme.
+	-->
+	<link href="lib/98.css/98.custom-build.css" class="flippable-layout-stylesheet not-for-modern" rel="stylesheet"
+		type="text/css">
+
+	<link rel="apple-touch-icon" href="images/icons/apple-icon-180x180.png">
+	<!-- Chrome will pick the largest image for some reason, instead of the most appropriate one. -->
+	<!-- <link rel="icon" type="image/png" sizes="192x192" href="images/icons/192x192.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="images/icons/32x32.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="images/icons/96x96.png"> -->
+	<!-- <link rel="icon" type="image/png" sizes="16x16" href="images/icons/16x16.png"> -->
+	<link rel="shortcut icon" href="favicon.ico">
+	<link rel="mask-icon" href="images/icons/safari-pinned-tab.svg" color="red">
+	<link rel="manifest" href="manifest.webmanifest">
+	<meta name="msapplication-TileColor" content="#5965d8">
+	<meta name="msapplication-TileImage" content="images/icons/ms-icon-144x144.png">
+	<meta name="theme-color" content="#5965d8">
+
+	<meta name="viewport" content="width=device-width, user-scalable=no">
+
+	<meta name="description" content="Modern Paint is a browser-based bitmap image editor." />
+	<meta property="og:description" content="A modern, browser-based bitmap image editor.">
+	<meta property="og:title" content="Modern Paint">
+	<meta name="twitter:title" content="Modern Paint">
+	<meta name="twitter:description" content="A modern, browser-based bitmap image editor.">
+	<meta name="twitter:card" content="summary_large_image">
+
+	<script src="src/error-handling-basic.js"></script>
+	<script type="module" src="src/theme.js"></script>
+</head>
+
+<body>
+	<div id="about-paint" style="display: none">
+		<div id="about-paint-header">
+			<img src="images/icons/128x128.png" width="128" height="128" id="about-paint-icon" alt="" />
+			<div id="about-paint-beside-icon">
+				<h1 id="modern-paint-project-name">Modern Paint</h1>
+				<div id="modern-paint-version">Version 1.1.0</div>
+			</div>
+		</div>
+		<p>A modern, browser-based bitmap image editor.</p>
+		<p>
+			<a href="LICENSE.txt" target="_blank">MIT License</a>
+			&middot;
+			<a href="privacy.html" target="_blank">Privacy Policy</a>
+		</p>
+	</div>
+	<!-- Note: no CDNs, even with fallback, as the fallback is too complicated to handle with CSP. -->
+	<script src="lib/jquery-3.4.1.min.js"></script>
+	<script src="lib/gif.js/gif.js"></script>
+	<!-- pako is used by UPNG.js and UTIF.js -->
+	<script src="lib/pako-2.0.3.min.js"></script>
+	<script src="lib/UPNG.js"></script>
+	<script src="lib/UTIF.js"></script>
+	<script src="lib/bmp.js"></script>
+	<script src="lib/pdf.js/build/pdf.js"></script>
+	<script src="lib/anypalette-0.6.0.js"></script>
+	<script src="lib/FileSaver.js"></script>
+	<script src="lib/font-detective.js"></script>
+	<script src="lib/libtess.min.js"></script>
+	<script src="lib/tracky-mouse/core/tracky-mouse.js"></script>
+	<script src="lib/os-gui/parse-theme.js"></script>
+	<script src="lib/os-gui/$Window.js"></script>
+	<script src="lib/os-gui/MenuBar.js"></script>
+	<script src="lib/imagetracer_v1.2.5.js"></script>
+
+	<!-- must not be async/deferred, as it uses document.write(); and must come before other app code which uses localization functions -->
+	<!-- (also depends on msgbox.js and thus os-gui.js, but not initially) -->
+	<script src="src/app-localization.js"></script>
+
+	<!-- Scripts that are not yet transitioned to ES Modules are marked as "defer"
+	so that the ES Modules (which are implicitly deferred) can still export globals to be consumed by the non-module scripts,
+	which helps with progressively converting the codebase to ES Modules. -->
+	<script type="module" src="src/msgbox.js"></script>
+	<script type="module" src="src/functions.js"></script>
+	<script type="module" src="src/helpers.js"></script>
+	<script type="module" src="src/storage.js"></script>
+	<script type="module" src="src/$Component.js"></script>
+	<script type="module" src="src/$ToolWindow.js"></script>
+
+	<!-- After show_error_message, showMessageBox, make_window_supporting_scale, and localize are defined,
+	set up better global error handling. -->
+	<script type="module" src="src/error-handling-enhanced.js"></script>
+
+	<script type="module" src="src/$ToolBox.js"></script>
+	<script type="module" src="src/$ColorBox.js"></script>
+	<script type="module" src="src/$FontBox.js"></script>
+	<script type="module" src="src/Handles.js"></script>
+	<script type="module" src="src/OnCanvasObject.js"></script>
+	<script type="module" src="src/OnCanvasSelection.js"></script>
+	<script type="module" src="src/OnCanvasTextBox.js"></script>
+	<script type="module" src="src/OnCanvasHelperLayer.js"></script>
+	<script type="module" src="src/image-manipulation.js"></script>
+	<script type="module" src="src/tool-options.js"></script>
+	<script type="module" src="src/tools.js"></script>
+	<!--<script type="module" src="src/extra-tools.js"></script>-->
+	<script type="module" src="src/color-data.js"></script>
+	<script type="module" src="src/edit-colors.js"></script>
+	<script type="module" src="src/file-format-data.js"></script>
+	<script type="module" src="src/manage-storage.js"></script>
+	<script type="module" src="src/imgur.js"></script>
+	<script type="module" src="src/help.js"></script>
+	<script type="module" src="src/simulate-random-gestures.js"></script>
+	<script type="module" src="src/menus.js"></script>
+	<script type="module" src="src/speech-recognition.js"></script>
+	<script type="module" src="src/eye-gaze-mode.js"></script>
+	<script defer src="src/app-state.js"></script>
+	<script type="module" src="src/app.js"></script>
+	<script type="module" src="src/sessions.js"></script>
+	<script type="module" src="src/konami.js"></script>
+	<script type="module" src="src/vaporwave-fun.js"></script>
+
+	<noscript>
+		<h1><img src="images/icons/32x32.png" width="32" height="32" alt="" /> Modern Paint</h1>
+
+		<p>This application requires JavaScript to run.</p>
+	</noscript>
+
+	<svg style="position: absolute; pointer-events: none; bottom: 100%;">
+		<defs>
+			<filter id="disabled-inset-filter" x="0" y="0" width="1px" height="1px">
+				<feColorMatrix in="SourceGraphic" type="matrix" values="
+					1 0 0 0 0
+					0 1 0 0 0
+					0 0 1 0 0
+					-1000 -1000 -1000 1 0
+				" result="black-parts-isolated" />
+				<feFlood result="shadow-color" flood-color="var(--ButtonShadow)" />
+				<feFlood result="hilight-color" flood-color="var(--ButtonHilight)" />
+				<feOffset in="black-parts-isolated" dx="1" dy="1" result="offset" />
+				<feComposite in="hilight-color" in2="offset" operator="in" result="hilight-colored-offset" />
+				<feComposite in="shadow-color" in2="black-parts-isolated" operator="in" result="shadow-colored" />
+				<feMerge>
+					<feMergeNode in="hilight-colored-offset" />
+					<feMergeNode in="shadow-colored" />
+				</feMerge>
+			</filter>
+			<filter id="disabled-inset-filter-2" x="0" y="0" width="1px" height="1px">
+				<feColorMatrix in="SourceGraphic" type="matrix" values="
+					1 0 0 0 0
+					0 1 0 0 0
+					0 0 1 0 0
+					-1 -1 -0 1 0
+				" result="black-and-blue-parts-isolated" />
+				<feFlood result="shadow-color" flood-color="var(--ButtonShadow)" />
+				<feFlood result="hilight-color" flood-color="var(--ButtonHilight)" />
+				<feOffset in="black-and-blue-parts-isolated" dx="1" dy="1" result="offset" />
+				<feComposite in="hilight-color" in2="offset" operator="in" result="hilight-colored-offset" />
+				<feComposite in="shadow-color" in2="black-and-blue-parts-isolated" operator="in"
+					result="shadow-colored" />
+				<feMerge>
+					<feMergeNode in="hilight-colored-offset" />
+					<feMergeNode in="shadow-colored" />
+				</feMerge>
+			</filter>
+		</defs>
+	</svg>
+</body>
+
+</html>
